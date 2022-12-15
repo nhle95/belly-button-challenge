@@ -2,29 +2,24 @@
 const url = "https://2u-data-curriculum-team.s3.amazonaws.com/dataviz-classroom/v1.1/14-Interactive-Web-Visualizations/02-Homework/samples.json"; 
 
 //Using metadata to gather demographic info, create all required charts
-function grabdata(id){
+function buildcharts(id){
     d3.json(url).then(function (data) {
        
         let metadata = data.metadata;
         let samples = data.samples;
         //filter for test id 
-        let first_md = metadata.filter(info => info.id == id)[0];
+        let first_patient = metadata.filter(info => info.id == id)[0];
         let first_sample = samples.filter(info => info.id == id)[0];
-        
         //bar and bubble chart variables from sample
         let sample_values = first_sample.sample_values;
-        // console.log(sample_values);
         let otu_ids = first_sample.otu_ids;
-        // console.log(otu_ids);
         let otu_labels = first_sample.otu_labels;
-        // console.log(otu_labels);
-
         //wash frequency for the guage plot
-        let washing_frequency = first_md.wfreq;
-        // console.log(wash_frequency);
+        let washing_frequency = first_patient.wfreq;
+        
 
-        //bar chart
-        let bar_data = [{
+        //build bar chart
+        let bar_graph = [{
             //grab sample_values for x values
             x: sample_values.slice(0, 10).reverse(),
             // use sample_values for y values
@@ -36,16 +31,16 @@ function grabdata(id){
             orientation: 'h'
         }];
 
-        //creating the layout for bar chart
+        //bar chart layout
         let bar_layout = {
             title: "Top 10 OTU",
             xaxis: {title: 'Sample Values'}
         };
         
-        Plotly.newPlot('bar', bar_data, bar_layout);
+        Plotly.newPlot('bar', bar_graph, bar_layout);
 
         //bubble chart
-        let bubble_data = [{
+        let bubble_graph = [{
             x: otu_ids,
             y: sample_values,
             text: otu_labels,
@@ -61,9 +56,9 @@ function grabdata(id){
             yaxis: {title: 'Sample Values'}
         };
 
-        Plotly.newPlot('bubble', bubble_data, layout);
+        Plotly.newPlot('bubble', bubble_graph, layout);
 
-        //Creating the guage chart
+        //guage chart
         let gauge_data = [{
             domain: {x: [0,1], y: [0,1]},
             value: washing_frequency,
@@ -73,16 +68,15 @@ function grabdata(id){
             gauge: {
                 axis: {range: [0,9]},
                 steps: [
-                    {range: [0, 1], color: '#f7f2ec'},
-                    {range: [1, 2], color: '#f3f0e5'},
-                    {range: [2, 3], color: '#e9e7c9'},
-                    {range: [3, 4], color: '#e5e9b0'},
-                    {range: [4, 5], color: '#d5e595'},
-                    {range: [5, 6], color: '#b7cd8b'},
-                    {range: [6, 7], color: '#87c080'},
-                    {range: [7, 8], color: '#85bc8b'},
-                    {range: [8, 9], color: '#80b586'}
-                ]
+                    { range: [0, 1], color: "ivory"},
+                    { range: [1, 2], color: "floralwhite" },
+                    { range: [2, 3], color: "oldlace" },
+                    { range: [3, 4], color: " blanchedalmond " },
+                    { range: [4, 5], color: "peachpuff" },
+                    { range: [5, 6], color: "sandybrown" },
+                    { range: [6, 7], color: "darkorange" },
+                    { range: [7, 8], color: "chocolate" },
+                    { range: [8, 9], color: "sienna" }]
             }
         }];
 
@@ -99,8 +93,8 @@ function demographic_info(id){
         let metadata = data.metadata;
         
         //filter the meta data
-        let first_md =  metadata.filter(info => info.id == id)[0];
-        console.log(first_md)
+        let first_patient =  metadata.filter(info => info.id == id)[0];
+        console.log(first_patient)
 
         //select the demographic box
         let demo_data = d3.select('#sample-metadata');
@@ -108,33 +102,30 @@ function demographic_info(id){
         //delete anything in the box when change
         demo_data.html('');
 
-        Object.entries(first_md).forEach(([key, value]) => {
+        Object.entries(first_patient).forEach(([key, value]) => {
             demo_data.append('p').text(`${key}: ${value}`)
         });
     });
 };
 
 
+//dropdown menu
+let dropwdown = d3.select('#selDataset');
+d3.json(url).then(function (data){
+    let names = data.names;
+    //input variables for the dropdown menu
+    names.forEach(name => {
+        dropwdown.append('option').text(name).property('value', name)
+    });
+    buildcharts(names[0]);
+    demographic_info(names[0]);
+});
+
+
 //update new testing samples
 function optionChanged(id){
-    grabdata(id);
+    buildcharts(id);
     demographic_info(id)
 };
 
 
-function init(){
-    //dropdown menu variable
-    let dropwdown = d3.select('#selDataset');
-
-    //preload all data
-    d3.json(url).then(function (data){
-        let names = data.names;
-        //input variables for the dropdown menu
-        names.forEach(name => {
-            dropwdown.append('option').text(name).property('value', name)
-        });
-        grabData(names[0]);
-        demographic_info(names[0]);
-    });
-};
-init();
